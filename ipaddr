@@ -9,6 +9,9 @@ print_ipv6=1
 print_ipv4=1
 print_loopback=1
 
+# Ensure that flags are not specified from outside the script for the `ip` command
+ip_flags=
+
 # Parse arguments
 for i in "$@";
 do
@@ -39,12 +42,16 @@ do
     esac
 done
 
-# Prints the devices ipv4 addresses, printing the loopback addresses if that flag is enabled.
-printipv4() {
+# Prints out ip addresses.
+# If the loopback flag is enabled, it will also print the loopback ip addresses.
+# If the device flag is enabled, the device name will be printed in front of each ip address.
+# 
+# Extra flags for the `ip` command can be specified by assinging them to the variable `ip_flags`
+print_ip() {
     # Separator is now a newline instead of whitespace. Allows for-loop to split at newlines only.
     IFS=$'\n'
 
-    for net_device in $(ip -oneline -4 address show);
+    for net_device in $(ip -oneline $ip_flags address show);
     do
         device="$(echo "$net_device" | awk '{print $2}' | cut -d/ -f1)"
         ipv4addr="$(echo "$net_device" | awk '{print $4}' | cut -d/ -f1)"
@@ -56,23 +63,20 @@ printipv4() {
     done
 }
 
+# Prints the devices ipv4 addresses, printing the loopback addresses if that flag is enabled.
+printipv4() {
+    # `-4` tell the `ip` command to print ipv4 addresses
+    ip_flags="-4"
+
+    print_ip
+}
+
 # Prints the devices ipv6 addresses, printing the loopback addresses if that flag is enabled.
 printipv6() {
-    # Print IPv6 addresses
+    # `-6` tell the `ip` command to print ipv6 addresses
+    ip_flags="-6"
 
-    # Separator is now a newline instead of whitespace. Allows for-loop to split at newlines only.
-    IFS=$'\n'
-
-    for net_device in $(ip -oneline -6 address show);
-    do
-        device="$(echo "$net_device" | awk '{print $2}' | cut -d/ -f1)"
-        ipv6addr="$(echo "$net_device" | awk '{print $4}' | cut -d/ -f1)"
-
-        # Skip loopback addresses unless specifically asked for.
-        if [[ $print_loopback -eq $TRUE ]] || ! [[ "$device" == "lo" ]];
-        then echo "$ipv6addr"
-        fi
-    done
+    print_ip
 }
 
 ## SCRIPT BODY BEGINS HERE ##

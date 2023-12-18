@@ -5,9 +5,9 @@ TRUE=0
 FALSE=1
 
 # Set all arguments as false, unless enabled with a flag.
-print_ipv6=1
-print_ipv4=1
-print_loopback=1
+print_ipv6=$FALSE
+print_ipv4=$FALSE
+print_loopback=$FALSE
 
 # Ensure that flags are not specified from outside the script for the `ip` command
 ip_flags=
@@ -17,15 +17,15 @@ for i in "$@";
 do
     case $1 in
         -6|--v6)
-            print_ipv6=0
+            print_ipv6=$TRUE
             shift # past argument
             ;;
         -4|--v4)
-            print_ipv4=0
+            print_ipv4=$TRUE
             shift # past argument
             ;;
         -lo|--loopback)
-            print_loopback=0
+            print_loopback=$TRUE
             shift # past argument
             ;;
         -h|--help)

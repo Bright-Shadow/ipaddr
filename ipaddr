@@ -8,6 +8,7 @@ FALSE=1
 print_ipv6=$FALSE
 print_ipv4=$FALSE
 print_loopback=$FALSE
+print_device=$FALSE
 
 # Ensure that flags are not specified from outside the script for the `ip` command
 ip_flags=
@@ -28,12 +29,17 @@ do
             print_loopback=$TRUE
             shift # past argument
             ;;
+        -dev|--device)
+            print_device=$TRUE
+            shift # past argument
+            ;;
         -h|--help)
             echo "Prints the ip address of the local system. By default, no options are selected."
             echo "Options:"
             echo "  -6, --v6         Prints ipv6 addresses"
             echo "  -4, --v4         Prints ipv4 addresses"
             echo "  -lo, --loopback  Prints loopback addresses for the selected ip versions"
+            echo "  -dev, --device   Prints device associated with each ip address in front of it"
             ;;
         *)
             echo "Unknown option $1"
@@ -53,12 +59,16 @@ print_ip() {
 
     for net_device in $(ip -oneline $ip_flags address show);
     do
-        device="$(echo "$net_device" | awk '{print $2}' | cut -d/ -f1)"
+        device="$(echo "$net_device" | awk '{print $2}')"
         ipv4addr="$(echo "$net_device" | awk '{print $4}' | cut -d/ -f1)"
 
         # Skip loopback addresses unless specifically asked for.
         if [[ $print_loopback -eq $TRUE ]] || ! [[ "$device" == "lo" ]];
-        then echo "$ipv4addr"
+        then
+            if [[ $print_device -eq $TRUE ]]
+            then echo "$device $ipv4addr"
+            else echo "$ipv4addr"
+            fi
         fi
     done
 }
